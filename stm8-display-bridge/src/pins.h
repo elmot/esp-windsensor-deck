@@ -11,7 +11,7 @@ DISPLAY
 */
 
 
-#define DISP_GPIO_DATA GPIOB
+#define DISP_GPIO_DATA GPIOD
 #define DISP_GPIO_CTRL GPIOA
 
 #define NRST GPIO_PIN_3	
