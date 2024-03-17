@@ -15,13 +15,13 @@ set(OUTPUT_NAME rpi_display)
 include_directories(${PIMORONI_PICO_PATH})
 list(APPEND CMAKE_MODULE_PATH ${PIMORONI_PICO_PATH})
 
-add_executable(${OUTPUT_NAME} main.c)
+add_executable(${OUTPUT_NAME} main.cpp)
 add_subdirectory(pimoroni-pico/common)
 add_subdirectory(pimoroni-pico/drivers)
 add_subdirectory(pimoroni-pico/libraries)
 
 # Pull in pico libraries that we need
-target_link_libraries(${OUTPUT_NAME} pico_stdlib hardware_spi hardware_pwm hardware_dma button pico_display_2 st7789 pico_graphics)
+target_link_libraries(${OUTPUT_NAME} pico_stdlib hardware_spi hardware_pwm hardware_dma pico_display_2 st7789 pico_graphics rgbled)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(${OUTPUT_NAME})
