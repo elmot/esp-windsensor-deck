@@ -21,7 +21,7 @@ add_subdirectory(pimoroni-pico/drivers)
 add_subdirectory(pimoroni-pico/libraries)
 
 # Pull in pico libraries that we need
-target_link_libraries(${OUTPUT_NAME} pico_stdlib hardware_spi hardware_pwm hardware_dma pico_display_2 st7789 pico_graphics rgbled)
+target_link_libraries(${OUTPUT_NAME} pico_stdlib hardware_spi hardware_pwm hardware_dma hardware_uart pico_display_2 st7789 pico_graphics rgbled)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(${OUTPUT_NAME})
