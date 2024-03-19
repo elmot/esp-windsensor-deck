@@ -8,22 +8,25 @@ extern "C" {
 #ifndef ESP32_WINDSENSOR_DECK_ELM_DISPLAY_H
 #define ESP32_WINDSENSOR_DECK_ELM_DISPLAY_H
 
+
 #define SCREEN_WIDTH (240)
 #define SCREEN_WIDTH_BYTES (SCREEN_WIDTH / 8)
 #define SCREEN_HEIGHT   (128)
 
 enum anem_state {
-    OK,
-    CONN_TIMEOUT,
-    CONN_FAIL
+    ANEMOMETER_OK,
+    ANEMOMETER_DATA_FAIL,
+    ANEMOMETER_CONN_TIMEOUT,
+    ANEMOMETER_CONN_FAIL
 };
 
 struct wind_state {
-    enum anem_state anemState;
-    int windAngle;
-    float windSpdMps;
-    int backLightPercent;
-    bool angleAlarm;
+    volatile enum anem_state anemState;
+    volatile int windAngle;
+    volatile float windSpdMps;
+    volatile int backLightPercent;
+    volatile bool angleAlarm;
+    volatile TickType_t timestamp;
 };
 
 extern struct wind_state state;
@@ -33,6 +36,9 @@ void lcdInit(void);
 void lcdSplash(void);
 
 void lcdMainScreenUpdatePicture(void);
+
+bool scanAlarm(const char *nmeaExpr);
+bool scanWind(const char *nmeaExpr);
 
 #ifdef __cplusplus
 };

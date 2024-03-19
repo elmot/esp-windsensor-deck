@@ -226,18 +226,18 @@ static void lcdDrawScreenData() {
 void lcdMainScreenUpdatePicture() {
     displayCopyPict(BACKGROUND);
     switch (state.anemState) {
-        case OK:
+        case ANEMOMETER_OK:
             affineTransformDisplay.reset();
             affineTransformDisplay.rotate(-(float) state.windAngle / 180.0f * (float) M_PI, 63, 63);
             affineTransformDisplay.line(63, 127, 63, 63, 3, "1");
             lcdDrawScreenData();
             break;
-        case CONN_TIMEOUT:
-        case CONN_FAIL:
+        case ANEMOMETER_CONN_TIMEOUT:
+        case ANEMOMETER_CONN_FAIL://todo implement
             copySprite(6, 38, 4, 32, 0, &FONT[2 * 32 * 4]);
             enableAlarmLed();
             break;
-        default:
+        default://todo sensor fail?
             charOutput(CHAR_CONN_FAIL, 6, 38);
             enableAlarmLed();
             break;
