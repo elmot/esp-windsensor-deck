@@ -1,11 +1,3 @@
-/* UART Echo Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
@@ -16,16 +8,35 @@
 //todo watchdog
 static const char *TAG = "NMEA DISPLAY";
 
-[[noreturn]] static void display_task([[maybe_unused]] void *arg) {
-ESP_UNUSED(arg);
+struct wind_state state = {
+        .backLightPercent =50,
+        .anemState=OK,
+        .angleAlarm=true,
+        .windAngle=27,
+        .windSpdMps=6};
+
+static void __attribute__((noreturn)) display_task([[maybe_unused]] void *arg) {
+    ESP_UNUSED(TAG);
+    ESP_UNUSED(arg);
     lcdInit();
+    lcdSplash();
     while (true) {
-        lcdSplash();
         TickType_t xLastWakeTime = xTaskGetTickCount();
         vTaskDelayUntil(&xLastWakeTime, 1500 * xPortGetTickRateHz() / 1000);
+        lcdMainScreenUpdatePicture();
+
+            { //todo remove
+            state.windAngle+=1;
+            state.windSpdMps+=1;
+            state.angleAlarm =! state.angleAlarm;
+            state.anemState = (state.anemState+1)%3;
+            }
+
     }
 }
- void app_main() {
+
+void app_main() {
      ESP_UNUSED(app_main);
      xTaskCreate(display_task, "uart_echo_task", 2048, NULL, 10, NULL);
 }
+
