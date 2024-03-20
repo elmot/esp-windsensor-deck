@@ -17,9 +17,9 @@
 //todo watchdog
 //todo initial screen
 //todo normal reconnect
-//todo sensor fail symbol
 //todo brightness buttons
 //todo backlight
+//todo semaphore
 static const char *TAG = "NMEA DISPLAY";
 
 struct wind_state state = {

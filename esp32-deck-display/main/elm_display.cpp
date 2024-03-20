@@ -26,6 +26,10 @@ const uint8_t FONT[] = {
 };
 #define CHAR_BACK_LIGHT 10
 #define CHAR_CONN_FAIL 12
+#define CHAR_DATA_FAIL 15
+#define CHAR_BATTERY 11
+#define CHAR_ANCHOR_LIGHTS 13
+#define CHAR_NAVI_LIGHTS 14
 
 const uint8_t FONT40x48[] = {
 #include "bitmaps/font40x48.txt"
@@ -175,7 +179,7 @@ copySprite(unsigned int xBytes, unsigned int y, int wBytes, int h, const uint8_t
 }
 
 static inline void charOutput(int charCode, unsigned int xBytes, unsigned int yPos, uint8_t xorMask = 0) {
-    copySprite(xBytes, yPos, 4, 32, xorMask, &FONT[32 * 4 * (14 - charCode)]);
+    copySprite(xBytes, yPos, 4, 32, xorMask, &FONT[32 * 4 * (15 - charCode)]);
 }
 
 static inline void bigCharOutput(int charCode, unsigned int xBytes, unsigned int yPos, bool invert = false) {
@@ -233,11 +237,12 @@ void lcdMainScreenUpdatePicture() {
             affineTransformDisplay.line(63, 127, 63, 63, 3, "1");
             lcdDrawScreenData();
             break;
-        case ANEMOMETER_CONN_TIMEOUT:
-        case ANEMOMETER_CONN_FAIL://todo implement
-            copySprite(6, 38, 4, 32, 0, &FONT[2 * 32 * 4]);
+        case ANEMOMETER_DATA_FAIL:
+            charOutput(CHAR_DATA_FAIL, 6, 38);
             enableAlarmLed();
             break;
+        case ANEMOMETER_CONN_TIMEOUT:
+        case ANEMOMETER_CONN_FAIL://todo implement
         default:
             charOutput(CHAR_CONN_FAIL, 6, 38);
             enableAlarmLed();
