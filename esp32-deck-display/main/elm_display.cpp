@@ -7,7 +7,7 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 
-#include "elm_display.h"
+#include "elm_display.hpp"
 
 uint8_t brightness = 60; //todo 0
 

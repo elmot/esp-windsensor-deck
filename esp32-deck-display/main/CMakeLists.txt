@@ -1,1 +1,1 @@
-idf_component_register(SRCS "main.c" "nmea.c" "elm_display.cpp")
+idf_component_register(SRCS "main.cpp" "nmea-parser.cpp" "elm_display.cpp")
