@@ -13,17 +13,14 @@
 #include <esp_wifi.h>
 
 #include "elm_display.hpp"
-
+#include "sdkconfig.h"
 //todo watchdog
+//todo initial screen
 //todo normal reconnect
-//todo detect sensor fail
-//todo dead run alarm?
-//todo sensor fail sign
+//todo sensor fail symbol
 //todo brightness buttons
 //todo backlight
 static const char *TAG = "NMEA DISPLAY";
-
-#define UDP_NMEA_PORT (9000)
 
 struct wind_state state = {
         .anemState=ANEMOMETER_OK,
@@ -48,9 +45,9 @@ static void __attribute__((noreturn)) display_task(void *arg) {
 static void udp_listener_task(void *arg);
 
 
-static esp_netif_t *elm_sta_netif = NULL;
+static esp_netif_t *elm_sta_netif = nullptr;
 
-void elm_wifi_start(void) {
+void elm_wifi_start() {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK_WITHOUT_ABORT(esp_wifi_init(&cfg));
 
@@ -66,18 +63,18 @@ void elm_wifi_start(void) {
     ESP_ERROR_CHECK_WITHOUT_ABORT(esp_wifi_start());
 }
 
-esp_err_t wifi_sta_connect(void) {
+esp_err_t wifi_sta_connect() {
 
     ESP_LOGI(TAG, "Start WiFi connect.");
     elm_wifi_start();
     wifi_config_t wifiConfig = {
             .sta = {
-                    .ssid = "yanus-wind",  //todo config
-                    .password = "EglaisEglais", //todo config
-                    .scan_method = WIFI_FAST_SCAN, //todo config
+                    .ssid = CONFIG_ESP_WIFI_SSID,
+                    .password = CONFIG_ESP_WIFI_PASSWORD,
+                    .scan_method = WIFI_FAST_SCAN,
                     .sort_method = WIFI_CONNECT_AP_BY_SIGNAL,
-                    .threshold= {.rssi = -127, //todo config
-                            .authmode = WIFI_AUTH_WPA2_PSK},
+                    .threshold= {.rssi = -127,
+                                 .authmode = WIFI_AUTH_WPA2_PSK},
             },
     };
     ESP_LOGI(TAG, "Connecting to %s...", wifiConfig.sta.ssid);
@@ -95,8 +92,8 @@ extern "C" void app_main() {
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    xTaskCreate(display_task, "display_task", 2048, NULL, 10, NULL);
-    xTaskCreate(udp_listener_task, "udp_listener_task", 16384, NULL, 10, NULL);
+    xTaskCreate(display_task, "display_task", 2048, nullptr, 10, nullptr);
+    xTaskCreate(udp_listener_task, "udp_listener_task", 16384, nullptr, 10, nullptr);
 
 }
 
@@ -108,7 +105,7 @@ static void udp_listener_task(void *args) {
     static const struct sockaddr_in dest_addr = {
             .sin_len =sizeof(struct sockaddr_in),
             .sin_family = AF_INET,
-            .sin_port = htons(UDP_NMEA_PORT),
+            .sin_port = htons(CONFIG_NMEA_UDP_PORT),
             .sin_addr= {.s_addr = htonl(INADDR_ANY)},
             .sin_zero={}
     };
@@ -133,13 +130,13 @@ static void udp_listener_task(void *args) {
         if (err < 0) {
             ESP_LOGE(TAG, "Socket unable to bind: errno %d", errno);
         }
-        ESP_LOGI(TAG, "Socket bound, port %d", UDP_NMEA_PORT);
+        ESP_LOGI(TAG, "Socket bound, port %d", CONFIG_NMEA_UDP_PORT);
 
         struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
         socklen_t socklen = sizeof(source_addr);
 
 
-        while (1) {
+        while (true) {
             ESP_LOGD(TAG, "Waiting for data");
             int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *) &source_addr, &socklen);
             // Error occurred during receiving

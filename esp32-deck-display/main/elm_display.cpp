@@ -218,8 +218,9 @@ static void lcdDrawScreenData() {
         draw3digits(true, angle, 15, 80);
     }
 
-    charOutput(((int) state.windSpdMps / 10) % 10, 17, 0);
-    charOutput((int) state.windSpdMps % 10, 21, 0);
+    int speed = lroundf(state.windSpdMps);
+    charOutput(((int) speed / 10) % 10, 17, 0);
+    charOutput((int) speed % 10, 21, 0);
 }
 
 
@@ -237,7 +238,7 @@ void lcdMainScreenUpdatePicture() {
             copySprite(6, 38, 4, 32, 0, &FONT[2 * 32 * 4]);
             enableAlarmLed();
             break;
-        default://todo sensor fail?
+        default:
             charOutput(CHAR_CONN_FAIL, 6, 38);
             enableAlarmLed();
             break;
@@ -339,9 +340,9 @@ void AffineTransformDisplay::screenLine(float fX1, float fY1, float fX2, float f
         for (int d = 0; d < width; d++) {
             int dy = d - width / 2;
             if (steep) {
-                pixel((float) (y + dy), (float) x, color);
+                screenPixel((float) (y + dy), (float) x, color);
             } else {
-                pixel((float) x, (float) (y + dy), color);
+                screenPixel((float) x, (float) (y + dy), color);
             }
         }
         err -= deltaY;

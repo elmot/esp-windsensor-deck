@@ -1,7 +1,26 @@
 #include "nmea-wind-parser.hpp"
 #include <cstring>
 #include <cmath>
+/*
+          MWV Wind Speed and Angle
+           1 2 3 4 5
+           | | | | |
+          $--MWV,x.x,a,x.x,a*hh
+          1) Wind Angle, 0 to 360 degrees
+          2) Reference, R = Relative, T = True
+          3) Wind Speed
+          4) Wind Speed Units, K/M/N
+          5) Status, A = Data Valid
+          6) Checksum
 
+          (Propientary)
+          WWT Wind Warning Type
+                  1      2
+                  |      |
+           $PEWWT,aaaaaa*hh
+           1) Alarm type - NONE | NO_MAGNET | ERROR | DEAD_RUN | TOO_CLOSE_TO_WIND
+           2) Checksum
+           */
 static inline int charToHex(char c) {
     return (c < '0') ? -1 :
            (c <= '9') ? (c - '0') :

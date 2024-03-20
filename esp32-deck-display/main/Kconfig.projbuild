@@ -1,0 +1,19 @@
+menu "Windsensor Configuration"
+
+    config ESP_WIFI_SSID
+        string "WiFi SSID"
+        default "yanus-wind"
+        help
+            SSID (network name) to set up the softAP with.
+
+    config ESP_WIFI_PASSWORD
+        string "SoftAP Password"
+        default "EglaisEglais"
+        help
+            WiFi password (WPA or WPA2) for softAP
+
+    config NMEA_UDP_PORT
+        int "NMEA UDP broadcast port"
+        default 9000
+
+endmenu
