@@ -12,24 +12,24 @@ extern TickType_t xTaskGetTickCount();
 #include "freertos/FreeRTOS.h"
 #endif
 
-enum anem_state {
+typedef enum  {
     ANEMOMETER_EXPECT_WIFI,
     ANEMOMETER_OK,
     ANEMOMETER_DATA_FAIL,
     ANEMOMETER_CONN_TIMEOUT,
     ANEMOMETER_CONN_FAIL
-};
+} anemometer_state_t;
 
-struct wind_state {
-    volatile enum anem_state anemState;
+typedef struct {
+    volatile anemometer_state_t anemState;
     volatile int windAngle;
     volatile float windSpdMps;
     volatile int backLightPercent;
     volatile bool angleAlarm;
     volatile TickType_t timestamp;
-};
+} wind_data_t;
 
-extern wind_state state;
+extern volatile wind_data_t windData;
 
 bool parseNmea(const char *nmeaString);
 

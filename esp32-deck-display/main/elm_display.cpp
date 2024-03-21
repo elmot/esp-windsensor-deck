@@ -202,17 +202,17 @@ static void draw3digits(bool big, unsigned int val, unsigned int xBytes, unsigne
 }
 
 static void lcdDrawScreenData() {
-    if (state.windAngle >= 0) {
+    if (windData.windAngle >= 0) {
         int angle;
         int direction;
-        if (state.windAngle > 180) {
-            angle = 360 - state.windAngle;
+        if (windData.windAngle > 180) {
+            angle = 360 - windData.windAngle;
             direction = 11;
         } else {
-            angle = state.windAngle;
+            angle = windData.windAngle;
             direction = 12;
         }
-        if (state.angleAlarm) {
+        if (windData.angleAlarm) {
             bigCharOutput(13, 25, 32, false);
             enableAlarmLed();
         } else {
@@ -222,7 +222,7 @@ static void lcdDrawScreenData() {
         draw3digits(true, angle, 15, 80);
     }
 
-    int speed = lroundf(state.windSpdMps);
+    int speed = lroundf(windData.windSpdMps);
     charOutput(((int) speed / 10) % 10, 17, 0);
     charOutput((int) speed % 10, 21, 0);
 }
@@ -230,10 +230,14 @@ static void lcdDrawScreenData() {
 
 void lcdMainScreenUpdatePicture() {
     displayCopyPict(BACKGROUND);
-    switch (state.anemState) {
+    volatile anemometer_state_t anemState = windData.anemState;
+    if((xTaskGetTickCount() - windData.timestamp ) > INCOMING_DATA_TIMEOUT) {
+        anemState = ANEMOMETER_CONN_TIMEOUT;
+    }
+    switch (anemState) {
         case ANEMOMETER_OK:
             affineTransformDisplay.reset();
-            affineTransformDisplay.rotate(-(float) state.windAngle / 180.0f * (float) M_PI, 63, 63);
+            affineTransformDisplay.rotate(-(float) windData.windAngle / 180.0f * (float) M_PI, 63, 63);
             affineTransformDisplay.line(63, 127, 63, 63, 3, "1");
             lcdDrawScreenData();
             break;
@@ -245,14 +249,14 @@ void lcdMainScreenUpdatePicture() {
             charOutput(CHAR_DATA_FAIL, 6, 38);
             enableAlarmLed();
             break;
-        case ANEMOMETER_CONN_TIMEOUT://todo implement
+        case ANEMOMETER_CONN_TIMEOUT:
         case ANEMOMETER_CONN_FAIL:
         default:
             charOutput(CHAR_CONN_FAIL, 6, 38);
             enableAlarmLed();
             break;
     }
-    if (state.backLightPercent != 0) {
+    if (windData.backLightPercent != 0) {
         charOutput(CHAR_BACK_LIGHT, 0, 0);
     }
     displayPaint();
@@ -268,7 +272,7 @@ void AffineTransformDisplay::screenPixel(float fX, float fY, bool color) {
 
 }
 
- void AffineTransformDisplay::pixel(float x, float y, bool color) const {
+ [[maybe_unused]] void AffineTransformDisplay::pixel(float x, float y, bool color) const {
     float tX = 0.5F + m00 * x + m01 * y + m02;
     float tY = 0.5F + m10 * x + m11 * y + m12;
     screenPixel(tX, tY, color);

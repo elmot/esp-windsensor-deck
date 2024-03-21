@@ -94,15 +94,15 @@ bool parseNmea(const char *nmeaString) {
     if (!isNmeaFrameOk(nmeaString)) return false;
     const char *NO_WARNING = "$PEWWT,NONE*";
     if (strncmp(NO_WARNING, nmeaString, 7) == 0) {
-        state.timestamp = xTaskGetTickCount();
-        state.angleAlarm = strncmp(NO_WARNING, nmeaString, strlen(NO_WARNING)) != 0;
+        windData.timestamp = xTaskGetTickCount();
+        windData.angleAlarm = strncmp(NO_WARNING, nmeaString, strlen(NO_WARNING)) != 0;
         return true;
     }
     if (nmeaString[1] == 0 || nmeaString[2] == 0) return false;//Instrument type, ignored
     if (strncmp("MWV,", nmeaString + 3, 4) != 0) return false;
     float speed, angle;
     const char *ptr = nmeaString + 7;
-    enum anem_state anemState = ANEMOMETER_OK;
+    anemometer_state_t anemState = ANEMOMETER_OK;
     switch (parseFloat(ptr, angle)) {
         case WRONG:
             return false;
@@ -148,11 +148,11 @@ bool parseNmea(const char *nmeaString) {
         default:
             return false;
     }
-    state.anemState = anemState;
-    state.timestamp = xTaskGetTickCount();
+    windData.anemState = anemState;
+    windData.timestamp = xTaskGetTickCount();
     if (anemState != ANEMOMETER_DATA_FAIL) {
-        state.windSpdMps = speed;
-        state.windAngle = lroundf(angle);
+        windData.windSpdMps = speed;
+        windData.windAngle = lroundf(angle);
     }
     return true;
 }

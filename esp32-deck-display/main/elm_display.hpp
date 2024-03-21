@@ -10,6 +10,7 @@
 #define SCREEN_HEIGHT   (128)
 
 #define SCREEN_UPDATE_TIMEOUT_MS (70)
+#define INCOMING_DATA_TIMEOUT (3000)
 
 void lcdInit();
 

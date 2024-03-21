@@ -7,25 +7,19 @@
 
 using Catch::Matchers::WithinAbs;
 
-struct wind_state state;
+volatile wind_data_t windData;
 
 int xTaskGetTickCount() { return 100; }
 
-void testWind(const char *nmeaString, bool parseable, enum anem_state state, int angle, float speed);
-
-void testCheckSumFail(const char *nmeaString);
-
-void testAlarm(const char *nmeaString, bool parseable, bool expectedAlarm);
-
 void resetData(bool expectedAlarm = false) {
-    state.anemState = ANEMOMETER_CONN_FAIL;
-    state.angleAlarm = expectedAlarm;
-    state.timestamp = -100;
-    state.windAngle = -1;
-    state.windSpdMps = -1;
+    windData.anemState = ANEMOMETER_CONN_FAIL;
+    windData.angleAlarm = expectedAlarm;
+    windData.timestamp = -100;
+    windData.windAngle = -1;
+    windData.windSpdMps = -1;
 }
 
-#define STATE_UNCHANGED (state.anemState == ANEMOMETER_CONN_FAIL && state.windAngle == -1 && state.windSpdMps == -1&& state.timestamp < 0)
+#define STATE_UNCHANGED (windData.anemState == ANEMOMETER_CONN_FAIL && windData.windAngle == -1 && windData.windSpdMps == -1&& windData.timestamp < 0)
 
 
 TEST_CASE("Incorrect statements") {
@@ -73,10 +67,10 @@ TEST_CASE("Broken checksum") {
 TEST_CASE("Valid statements - [Wind measurement failed]") {
     resetData();
     REQUIRE(parseNmea("$WIMWV,,R,19.1,M,V*20"));
-    REQUIRE(state.timestamp > 0);
-    REQUIRE(state.anemState == ANEMOMETER_DATA_FAIL);
-    REQUIRE(state.windAngle == -1);
-    REQUIRE(state.windSpdMps == -1);
+    REQUIRE(windData.timestamp > 0);
+    REQUIRE(windData.anemState == ANEMOMETER_DATA_FAIL);
+    REQUIRE(windData.windAngle == -1);
+    REQUIRE(windData.windSpdMps == -1);
 }
 
 TEST_CASE("Valid statements", "[Wind statement]") {
@@ -84,25 +78,25 @@ TEST_CASE("Valid statements", "[Wind statement]") {
     SECTION("Normal data") {
         SECTION("Metric data") {
             REQUIRE(parseNmea("$WIMWV,45.0,R,31.5,M,A*26"));
-            REQUIRE(state.windAngle == 45);
-            REQUIRE_THAT(state.windSpdMps, WithinAbs(31.5, 0.01));
+            REQUIRE(windData.windAngle == 45);
+            REQUIRE_THAT(windData.windSpdMps, WithinAbs(31.5, 0.01));
         }
 
         SECTION("km/h data") {
             REQUIRE(parseNmea("$WIMWV,45.0,R,31.5,K,A*20"));
-            REQUIRE(state.windAngle == 45);
-            REQUIRE_THAT(state.windSpdMps, WithinAbs(8.75, 0.01));
+            REQUIRE(windData.windAngle == 45);
+            REQUIRE_THAT(windData.windSpdMps, WithinAbs(8.75, 0.01));
         }SECTION("Nautical data") {
             REQUIRE(parseNmea("$WIMWV,45.0,R,31.5,N,A*25"));
-            REQUIRE(state.windAngle == 45);
-            REQUIRE_THAT(state.windSpdMps, WithinAbs(16.2, 0.01));
+            REQUIRE(windData.windAngle == 45);
+            REQUIRE_THAT(windData.windSpdMps, WithinAbs(16.2, 0.01));
         }SECTION("Normal data #2") {
             REQUIRE(parseNmea("$WIMWV,47.0,R,19.1,M,A*2A"));
-            REQUIRE(state.windAngle == 47);
-            REQUIRE_THAT(state.windSpdMps, WithinAbs(19.1, 0.01));
+            REQUIRE(windData.windAngle == 47);
+            REQUIRE_THAT(windData.windSpdMps, WithinAbs(19.1, 0.01));
         }
-        REQUIRE(state.anemState == ANEMOMETER_OK);
-        REQUIRE(state.timestamp > 0);
+        REQUIRE(windData.anemState == ANEMOMETER_OK);
+        REQUIRE(windData.timestamp > 0);
     }
 }
 
@@ -110,15 +104,15 @@ TEST_CASE("Alarm statement") {
     resetData();
     SECTION("Too close to wind") {
         REQUIRE(parseNmea("$PEWWT,TOO_CLOSE_TO_WIND*3F"));
-        REQUIRE(state.angleAlarm);
+        REQUIRE(windData.angleAlarm);
     }
     SECTION("Dead run") {
         REQUIRE(parseNmea("$PEWWT,TOO_CLOSE_TO_WIND*3F"));
-        REQUIRE(state.angleAlarm);
+        REQUIRE(windData.angleAlarm);
     }
     SECTION("No alarm") {
         REQUIRE(parseNmea("$PEWWT,NONE*67"));
-        REQUIRE_FALSE(state.angleAlarm);
+        REQUIRE_FALSE(windData.angleAlarm);
     }
-    REQUIRE(state.timestamp > 0);
+    REQUIRE(windData.timestamp > 0);
 }

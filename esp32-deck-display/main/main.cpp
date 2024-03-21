@@ -21,7 +21,7 @@
 //todo backlight
 static const char *TAG = "NMEA DISPLAY";
 
-struct wind_state state = {
+volatile wind_data_t windData = {
         .anemState=ANEMOMETER_EXPECT_WIFI,
         .windAngle=27,
         .windSpdMps=6,
@@ -81,7 +81,7 @@ esp_err_t wifi_sta_connect() {
     ESP_ERROR_CHECK_WITHOUT_ABORT(esp_wifi_set_config(WIFI_IF_STA, &wifiConfig));
     esp_err_t ret = esp_wifi_connect();
     if (ret != ESP_OK) {
-        state.anemState = ANEMOMETER_CONN_FAIL;
+        windData.anemState = ANEMOMETER_CONN_FAIL;
         ESP_LOGE(TAG, "WiFi connect failed! ret:%x", ret);
     }
     return ret;
@@ -137,7 +137,7 @@ static void udp_listener_task(void *args) {
         }
         ESP_LOGI(TAG, "Socket bound, port %d", CONFIG_NMEA_UDP_PORT);
 
-        struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
+        struct sockaddr_in source_addr;
         socklen_t socklen = sizeof(source_addr);
 
 
@@ -147,19 +147,12 @@ static void udp_listener_task(void *args) {
             // Error occurred during receiving
             if (len < 0) {
                 ESP_LOGE(TAG, "recvfrom failed: errno %d", errno);
-                state.anemState = ANEMOMETER_CONN_FAIL;
+                windData.anemState = ANEMOMETER_CONN_FAIL;
                 break;
-            }
-                // Data received
-            else {
-                // Get the sender's ip address as string
-                if (source_addr.ss_family == PF_INET) {
-                    inet_ntoa_r(((struct sockaddr_in *) &source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
-                } else if (source_addr.ss_family == PF_INET6) {
-                    inet6_ntoa_r(((struct sockaddr_in6 *) &source_addr)->sin6_addr, addr_str, sizeof(addr_str) - 1);
-                }
-
+            } else {// Data received
                 rx_buffer[len] = 0; // Null-terminate received to be a string
+                // Get the sender's ip address as string
+                inet_ntoa_r(source_addr.sin_addr, addr_str, sizeof(addr_str) - 1);
                 ESP_LOGD(TAG, "Received %d bytes from %s:", len, addr_str);
                 ESP_LOGD(TAG, "%s", rx_buffer);
                 if (!parseNmea(rx_buffer)) {
