@@ -13,6 +13,7 @@ extern TickType_t xTaskGetTickCount();
 #endif
 
 enum anem_state {
+    ANEMOMETER_EXPECT_WIFI,
     ANEMOMETER_OK,
     ANEMOMETER_DATA_FAIL,
     ANEMOMETER_CONN_TIMEOUT,

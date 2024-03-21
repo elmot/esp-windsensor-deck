@@ -27,6 +27,7 @@ const uint8_t FONT[] = {
 #define CHAR_BACK_LIGHT 10
 #define CHAR_CONN_FAIL 12
 #define CHAR_DATA_FAIL 15
+#define CHAR_WIFI 16
 #define CHAR_BATTERY 11
 #define CHAR_ANCHOR_LIGHTS 13
 #define CHAR_NAVI_LIGHTS 14
@@ -49,11 +50,11 @@ class AffineTransformDisplay {
 public:
     static void screenPixel(float x, float y, bool color);
 
-    void pixel(float x, float y, bool color);
+    [[maybe_unused]]void pixel(float x, float y, bool color) const;
 
     void line(float x1, float y1, float x2, float y2, float width, const char *pattern);
 
-    void screenLine(float x1, float y1, float x2, float y2, float width, const char *pattern);
+    static void screenLine(float x1, float y1, float x2, float y2, float width, const char *pattern);
 
     void reset();
 
@@ -144,9 +145,8 @@ void lcdInit() {
 
 void lcdSplash() {
 
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-
     for (int i = 0; i < (2 * SCREEN_WIDTH_BYTES) + 1; i += 2) {
+        TickType_t xLastWakeTime = xTaskGetTickCount();
         displayCopyPict(SPLASH_PICTURE);
         for (int j = 0; j < SCREEN_HEIGHT; j++) {
             int k = -j / 5 + i;
@@ -156,8 +156,8 @@ void lcdSplash() {
             }
         }
         displayPaint();
+        xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(SCREEN_UPDATE_TIMEOUT_MS));
     }
-    vTaskDelayUntil(&xLastWakeTime, 70 * xPortGetTickRateHz() / 1000);
 }
 
 
@@ -179,7 +179,7 @@ copySprite(unsigned int xBytes, unsigned int y, int wBytes, int h, const uint8_t
 }
 
 static inline void charOutput(int charCode, unsigned int xBytes, unsigned int yPos, uint8_t xorMask = 0) {
-    copySprite(xBytes, yPos, 4, 32, xorMask, &FONT[32 * 4 * (15 - charCode)]);
+    copySprite(xBytes, yPos, 4, 32, xorMask, &FONT[32 * 4 * (16 - charCode)]);
 }
 
 static inline void bigCharOutput(int charCode, unsigned int xBytes, unsigned int yPos, bool invert = false) {
@@ -237,12 +237,16 @@ void lcdMainScreenUpdatePicture() {
             affineTransformDisplay.line(63, 127, 63, 63, 3, "1");
             lcdDrawScreenData();
             break;
+        case ANEMOMETER_EXPECT_WIFI:
+            charOutput(CHAR_WIFI, 6, 38);
+            enableAlarmLed();
+            break;
         case ANEMOMETER_DATA_FAIL:
             charOutput(CHAR_DATA_FAIL, 6, 38);
             enableAlarmLed();
             break;
-        case ANEMOMETER_CONN_TIMEOUT:
-        case ANEMOMETER_CONN_FAIL://todo implement
+        case ANEMOMETER_CONN_TIMEOUT://todo implement
+        case ANEMOMETER_CONN_FAIL:
         default:
             charOutput(CHAR_CONN_FAIL, 6, 38);
             enableAlarmLed();
@@ -264,7 +268,7 @@ void AffineTransformDisplay::screenPixel(float fX, float fY, bool color) {
 
 }
 
-void AffineTransformDisplay::pixel(float x, float y, bool color) {
+ void AffineTransformDisplay::pixel(float x, float y, bool color) const {
     float tX = 0.5F + m00 * x + m01 * y + m02;
     float tY = 0.5F + m10 * x + m11 * y + m12;
     screenPixel(tX, tY, color);

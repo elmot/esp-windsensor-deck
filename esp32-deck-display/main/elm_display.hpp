@@ -9,10 +9,15 @@
 #define SCREEN_WIDTH_BYTES (SCREEN_WIDTH / 8)
 #define SCREEN_HEIGHT   (128)
 
-void lcdInit(void);
+#define SCREEN_UPDATE_TIMEOUT_MS (70)
 
-void lcdSplash(void);
+void lcdInit();
 
-void lcdMainScreenUpdatePicture(void);
+void lcdSplash();
+
+void lcdMainScreenUpdatePicture();
+
+extern SemaphoreHandle_t updateSemaphore;
+
 
 #endif //ESP32_WINDSENSOR_DECK_ELM_DISPLAY_H

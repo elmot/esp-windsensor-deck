@@ -14,16 +14,15 @@
 
 #include "elm_display.hpp"
 #include "sdkconfig.h"
+
 //todo watchdog
-//todo initial screen
 //todo normal reconnect
 //todo brightness buttons
 //todo backlight
-//todo semaphore
 static const char *TAG = "NMEA DISPLAY";
 
 struct wind_state state = {
-        .anemState=ANEMOMETER_OK,
+        .anemState=ANEMOMETER_EXPECT_WIFI,
         .windAngle=27,
         .windSpdMps=6,
         .backLightPercent =50,
@@ -37,7 +36,8 @@ static void __attribute__((noreturn)) display_task(void *arg) {
     lcdSplash();
     while (true) {
         TickType_t xLastWakeTime = xTaskGetTickCount();
-        vTaskDelayUntil(&xLastWakeTime, 1500 * xPortGetTickRateHz() / 1000);
+        xSemaphoreTake(updateSemaphore, pdMS_TO_TICKS(1000));
+        xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(SCREEN_UPDATE_TIMEOUT_MS));
         lcdMainScreenUpdatePicture();
     }
 }
@@ -74,7 +74,7 @@ esp_err_t wifi_sta_connect() {
                     .scan_method = WIFI_FAST_SCAN,
                     .sort_method = WIFI_CONNECT_AP_BY_SIGNAL,
                     .threshold= {.rssi = -127,
-                                 .authmode = WIFI_AUTH_WPA2_PSK},
+                            .authmode = WIFI_AUTH_WPA2_PSK},
             },
     };
     ESP_LOGI(TAG, "Connecting to %s...", wifiConfig.sta.ssid);
@@ -87,11 +87,15 @@ esp_err_t wifi_sta_connect() {
     return ret;
 }
 
+SemaphoreHandle_t updateSemaphore;
+static StaticSemaphore_t updateSemaphoreBuffer;
+
 extern "C" void app_main() {
     ESP_UNUSED(app_main);
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
+    updateSemaphore = xSemaphoreCreateBinaryStatic(&updateSemaphoreBuffer);
     xTaskCreate(display_task, "display_task", 2048, nullptr, 10, nullptr);
     xTaskCreate(udp_listener_task, "udp_listener_task", 16384, nullptr, 10, nullptr);
 
@@ -121,9 +125,10 @@ static void udp_listener_task(void *args) {
         ESP_LOGI(TAG, "Socket created");
 
         // Set timeout
-        struct timeval timeout;
-        timeout.tv_sec = 10;
-        timeout.tv_usec = 0;
+        struct timeval timeout = {
+                .tv_sec = 10,
+                .tv_usec = 0
+        };
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
 
         int err = bind(sock, (struct sockaddr *) &dest_addr, sizeof(dest_addr));
@@ -162,6 +167,7 @@ static void udp_listener_task(void *args) {
                 }
 
             }
+            xSemaphoreGive(updateSemaphore);
         }
 
         ESP_LOGE(TAG, "Shutting down socket and restarting...");
