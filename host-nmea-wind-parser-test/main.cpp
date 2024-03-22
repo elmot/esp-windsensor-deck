@@ -12,15 +12,14 @@ volatile wind_data_t windData;
 int xTaskGetTickCount() { return 100; }
 
 void resetData(bool expectedAlarm = false) {
-    windData.anemState = ANEMOMETER_CONN_FAIL;
+    windData.state = ANEMOMETER_CONN_FAIL;
     windData.angleAlarm = expectedAlarm;
     windData.timestamp = -100;
     windData.windAngle = -1;
     windData.windSpdMps = -1;
 }
 
-#define STATE_UNCHANGED (windData.anemState == ANEMOMETER_CONN_FAIL && windData.windAngle == -1 && windData.windSpdMps == -1&& windData.timestamp < 0)
-
+#define STATE_UNCHANGED (windData.state == ANEMOMETER_CONN_FAIL && windData.windAngle == -1 && windData.windSpdMps == -1&& windData.timestamp < 0)
 
 TEST_CASE("Incorrect statements") {
     resetData();
@@ -68,7 +67,7 @@ TEST_CASE("Valid statements - [Wind measurement failed]") {
     resetData();
     REQUIRE(parseNmea("$WIMWV,,R,19.1,M,V*20"));
     REQUIRE(windData.timestamp > 0);
-    REQUIRE(windData.anemState == ANEMOMETER_DATA_FAIL);
+    REQUIRE(windData.state == ANEMOMETER_DATA_FAIL);
     REQUIRE(windData.windAngle == -1);
     REQUIRE(windData.windSpdMps == -1);
 }
@@ -95,7 +94,7 @@ TEST_CASE("Valid statements", "[Wind statement]") {
             REQUIRE(windData.windAngle == 47);
             REQUIRE_THAT(windData.windSpdMps, WithinAbs(19.1, 0.01));
         }
-        REQUIRE(windData.anemState == ANEMOMETER_OK);
+        REQUIRE(windData.state == ANEMOMETER_OK);
         REQUIRE(windData.timestamp > 0);
     }
 }

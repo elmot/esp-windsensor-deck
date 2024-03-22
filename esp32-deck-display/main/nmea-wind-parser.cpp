@@ -102,12 +102,12 @@ bool parseNmea(const char *nmeaString) {
     if (strncmp("MWV,", nmeaString + 3, 4) != 0) return false;
     float speed, angle;
     const char *ptr = nmeaString + 7;
-    anemometer_state_t anemState = ANEMOMETER_OK;
+    anemometer_state_t state = ANEMOMETER_OK;
     switch (parseFloat(ptr, angle)) {
         case WRONG:
             return false;
         case MISSING:
-            anemState = ANEMOMETER_DATA_FAIL;
+            state = ANEMOMETER_DATA_FAIL;
             break;
         default:
             break;
@@ -120,7 +120,7 @@ bool parseNmea(const char *nmeaString) {
         case WRONG:
             return false;
         case MISSING:
-            anemState = ANEMOMETER_DATA_FAIL;
+            state = ANEMOMETER_DATA_FAIL;
             break;
         default:
             break;
@@ -141,16 +141,16 @@ bool parseNmea(const char *nmeaString) {
     if (',' != *(ptr++)) return false;
     switch (*ptr) {
         case 'V':
-            anemState = ANEMOMETER_DATA_FAIL;
+            state = ANEMOMETER_DATA_FAIL;
             break;
         case 'A':
             break;
         default:
             return false;
     }
-    windData.anemState = anemState;
+    windData.state = state;
     windData.timestamp = xTaskGetTickCount();
-    if (anemState != ANEMOMETER_DATA_FAIL) {
+    if (state != ANEMOMETER_DATA_FAIL) {
         windData.windSpdMps = speed;
         windData.windAngle = lroundf(angle);
     }

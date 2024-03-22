@@ -21,7 +21,7 @@ typedef enum  {
 } anemometer_state_t;
 
 typedef struct {
-    volatile anemometer_state_t anemState;
+    volatile anemometer_state_t state;
     volatile int windAngle;
     volatile float windSpdMps;
     volatile int backLightPercent;

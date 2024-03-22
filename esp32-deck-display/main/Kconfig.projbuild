@@ -16,4 +16,8 @@ menu "Windsensor Configuration"
         int "NMEA UDP broadcast port"
         default 9000
 
+    config WIFI_STA_TIMEOUT
+        int "Wi-Fi connection timeout, seconds"
+        default 5
+
 endmenu

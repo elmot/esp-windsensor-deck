@@ -230,11 +230,11 @@ static void lcdDrawScreenData() {
 
 void lcdMainScreenUpdatePicture() {
     displayCopyPict(BACKGROUND);
-    volatile anemometer_state_t anemState = windData.anemState;
+    volatile anemometer_state_t state = windData.state;
     if((xTaskGetTickCount() - windData.timestamp ) > INCOMING_DATA_TIMEOUT) {
-        anemState = ANEMOMETER_CONN_TIMEOUT;
+        state = ANEMOMETER_CONN_TIMEOUT;
     }
-    switch (anemState) {
+    switch (state) {
         case ANEMOMETER_OK:
             affineTransformDisplay.reset();
             affineTransformDisplay.rotate(-(float) windData.windAngle / 180.0f * (float) M_PI, 63, 63);
