@@ -12,14 +12,22 @@
 #define SCREEN_UPDATE_TIMEOUT_MS (70)
 #define INCOMING_DATA_TIMEOUT (3000)
 
+
+extern SemaphoreHandle_t updateSemaphore;
+
+extern SemaphoreHandle_t alarmSemaphore;
+
+extern volatile uint8_t lcdBrightness;
+
+
 void lcdInit();
 
 void lcdSplash();
 
 void lcdMainScreenUpdatePicture();
 
-extern SemaphoreHandle_t updateSemaphore;
+void __attribute__((noreturn)) buttons_task(void *arg);
 
-extern volatile uint8_t lcdBrightness;
+void __attribute__((noreturn)) alarm_led_task(void *args);
 
 #endif //ESP32_WINDSENSOR_DECK_ELM_DISPLAY_H

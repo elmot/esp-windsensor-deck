@@ -9,7 +9,7 @@
 
 #include "elm_display.hpp"
 
-volatile uint8_t lcdBrightness = 60; //todo 0
+volatile uint8_t lcdBrightness = 0;
 
 #define BUF_SIZE (1024)
 #define DISPLAY_UART (UART_NUM_1)

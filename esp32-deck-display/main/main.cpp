@@ -5,17 +5,14 @@
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "nvs_flash.h"
-#include "driver/gpio.h"
 
 #include <lwip/err.h>
 #include <lwip/sockets.h>
 #include <esp_wifi.h>
+#include <sys/param.h>
 
 #include "elm_display.hpp"
 
-//todo watchdog
-//todo brightness buttons
-//todo backlight
 static const char *TAG = "NMEA DISPLAY";
 
 volatile wind_data_t windData = {
@@ -26,7 +23,6 @@ volatile wind_data_t windData = {
         .timestamp = 0};
 
 static void __attribute__((noreturn)) display_task(void *arg) {
-    ESP_UNUSED(TAG);
     ESP_UNUSED(arg);
     lcdInit();
     lcdSplash();
@@ -46,40 +42,6 @@ static StaticSemaphore_t updateSemaphoreBuffer;
 SemaphoreHandle_t alarmSemaphore;
 static StaticSemaphore_t alarmSemaphoreBuffer;
 
-static void __attribute__((noreturn)) alarm_led_task(void *args) {
-    static const gpio_config_t gpioConfig = {
-            .pin_bit_mask = BIT(CONFIG_ALARM_LED_PIN),
-            .mode = GPIO_MODE_OUTPUT,
-            .pull_up_en = GPIO_PULLUP_DISABLE,
-            .pull_down_en = GPIO_PULLDOWN_DISABLE,
-            .intr_type = GPIO_INTR_DISABLE
-    };
-    gpio_config(&gpioConfig);
-    for (int level = 0; true;) {
-        TickType_t delay;
-        switch (windData.state) {
-            case ANEMOMETER_EXPECT_WIFI:
-                delay = 1500;
-                break;
-            case ANEMOMETER_OK:
-                delay = 600;
-                if (!windData.angleAlarm) {
-                    level = 1;
-                }
-                break;
-            case ANEMOMETER_DATA_FAIL:
-                delay = 100;
-                break;
-            default:
-                delay = 200;
-        }
-        gpio_set_level((gpio_num_t) CONFIG_ALARM_LED_PIN, level);
-        xSemaphoreTake(alarmSemaphore,pdMS_TO_TICKS(delay));
-        level = !level;
-    }
-}
-
-
 extern "C" void app_main() {
     ESP_UNUSED(app_main);
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -87,6 +49,7 @@ extern "C" void app_main() {
     alarmSemaphore = xSemaphoreCreateBinaryStatic(&alarmSemaphoreBuffer);
     xTaskCreate(display_task, "display_task", 2048, nullptr, 10, nullptr);
     xTaskCreate(alarm_led_task, "alarm_led_task", 4048, nullptr, 10, nullptr);
+    xTaskCreate(buttons_task, "alarm_led_task", 4048, nullptr, 10, nullptr);
     xTaskCreate(udp_listener_task, "udp_listener_task", 16384, nullptr, 10, nullptr);
 }
 
