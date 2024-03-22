@@ -20,5 +20,6 @@ void lcdMainScreenUpdatePicture();
 
 extern SemaphoreHandle_t updateSemaphore;
 
+extern volatile uint8_t lcdBrightness;
 
 #endif //ESP32_WINDSENSOR_DECK_ELM_DISPLAY_H

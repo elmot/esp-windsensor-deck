@@ -9,7 +9,7 @@
 
 #include "elm_display.hpp"
 
-uint8_t brightness = 60; //todo 0
+volatile uint8_t lcdBrightness = 60; //todo 0
 
 #define BUF_SIZE (1024)
 #define DISPLAY_UART (UART_NUM_1)
@@ -52,7 +52,7 @@ public:
 
     [[maybe_unused]]void pixel(float x, float y, bool color) const;
 
-    void line(float x1, float y1, float x2, float y2, float width, const char *pattern);
+    void line(float x1, float y1, float x2, float y2, float width, const char *pattern) const;
 
     static void screenLine(float x1, float y1, float x2, float y2, float width, const char *pattern);
 
@@ -115,7 +115,7 @@ static AffineTransformDisplay affineTransformDisplay;
 
 static void displayPaint() {
     uart_write_bytes(DISPLAY_UART, "\xAA\xA0", 2);
-    uart_write_bytes(DISPLAY_UART, &brightness, 1);
+    uart_write_bytes(DISPLAY_UART, (uint8_t *) &lcdBrightness, 1);
     for (int y = 127; y >= 0; y--) {
         for (int i = 0; i < 30; i++) {
             uint8_t byte = screen_buffer[y * 30 + i];
@@ -160,15 +160,6 @@ void lcdSplash() {
     }
 }
 
-
-void enableAlarmLed() {
-    //todo
-}
-
-void disableAlarmLed() {
-    //todo
-}
-
 static void
 copySprite(unsigned int xBytes, unsigned int y, int wBytes, int h, const uint8_t xorMask, const uint8_t *pict) {
     for (int iy = 0; iy < h; iy++) {
@@ -186,19 +177,22 @@ static inline void bigCharOutput(int charCode, unsigned int xBytes, unsigned int
     copySprite(xBytes, yPos, 5, 48, invert ? 0xff : 0, &FONT40x48[48 * 5 * (19 - charCode)]);
 }
 
-static void draw3digits(bool big, unsigned int val, unsigned int xBytes, unsigned int y, int activePos = -1) {
+static void draw3bigDigits(unsigned int val, unsigned int xBytes, unsigned int y) {
     unsigned char char1 = val / 100;
     unsigned char char2 = val / 10 % 10;
     unsigned char char3 = val % 10;
-    if (big) {
-        bigCharOutput(char1, xBytes, y, activePos == 0);
-        bigCharOutput(char2, xBytes + 5, y, activePos == 1);
-        bigCharOutput(char3, xBytes + 10, y, activePos == 2);
-    } else {
-        charOutput(char1, xBytes, y, activePos == 0 ? 0xFF : 0);
-        charOutput(char2, xBytes + 4, y, activePos == 1 ? 0xFF : 0);
-        charOutput(char3, xBytes + 8, y, activePos == 2 ? 0xFF : 0);
-    }
+    bigCharOutput(char1, xBytes, y);
+    bigCharOutput(char2, xBytes + 5, y);
+    bigCharOutput(char3, xBytes + 10, y);
+}
+
+[[maybe_unused]]static void draw3digits(unsigned int val, unsigned int xBytes, unsigned int y) {
+    unsigned char char1 = val / 100;
+    unsigned char char2 = val / 10 % 10;
+    unsigned char char3 = val % 10;
+    charOutput(char1, xBytes, y);
+    charOutput(char2, xBytes + 4, y);
+    charOutput(char3, xBytes + 8, y);
 }
 
 static void lcdDrawScreenData() {
@@ -214,12 +208,10 @@ static void lcdDrawScreenData() {
         }
         if (windData.angleAlarm) {
             bigCharOutput(13, 25, 32, false);
-            enableAlarmLed();
         } else {
-            disableAlarmLed();
         }
         bigCharOutput(direction, 20, 32, false);
-        draw3digits(true, angle, 15, 80);
+        draw3bigDigits(angle, 15, 80);
     }
 
     int speed = lroundf(windData.windSpdMps);
@@ -231,7 +223,7 @@ static void lcdDrawScreenData() {
 void lcdMainScreenUpdatePicture() {
     displayCopyPict(BACKGROUND);
     volatile anemometer_state_t state = windData.state;
-    if((xTaskGetTickCount() - windData.timestamp ) > INCOMING_DATA_TIMEOUT) {
+    if ((xTaskGetTickCount() - windData.timestamp) > INCOMING_DATA_TIMEOUT) {
         state = ANEMOMETER_CONN_TIMEOUT;
     }
     switch (state) {
@@ -243,20 +235,17 @@ void lcdMainScreenUpdatePicture() {
             break;
         case ANEMOMETER_EXPECT_WIFI:
             charOutput(CHAR_WIFI, 6, 38);
-            enableAlarmLed();
             break;
         case ANEMOMETER_DATA_FAIL:
             charOutput(CHAR_DATA_FAIL, 6, 38);
-            enableAlarmLed();
             break;
         case ANEMOMETER_CONN_TIMEOUT:
         case ANEMOMETER_CONN_FAIL:
         default:
             charOutput(CHAR_CONN_FAIL, 6, 38);
-            enableAlarmLed();
             break;
     }
-    if (windData.backLightPercent != 0) {
+    if (lcdBrightness != 0) {
         charOutput(CHAR_BACK_LIGHT, 0, 0);
     }
     displayPaint();
@@ -272,7 +261,7 @@ void AffineTransformDisplay::screenPixel(float fX, float fY, bool color) {
 
 }
 
- [[maybe_unused]] void AffineTransformDisplay::pixel(float x, float y, bool color) const {
+[[maybe_unused]] void AffineTransformDisplay::pixel(float x, float y, bool color) const {
     float tX = 0.5F + m00 * x + m01 * y + m02;
     float tY = 0.5F + m10 * x + m11 * y + m12;
     screenPixel(tX, tY, color);
@@ -309,7 +298,7 @@ void AffineTransformDisplay::rotate(float theta, float anchorX, float anchorY) {
     translate(-anchorX, -anchorY);
 }
 
-void AffineTransformDisplay::line(float x1, float y1, float x2, float y2, float width, const char *pattern) {
+void AffineTransformDisplay::line(float x1, float y1, float x2, float y2, float width, const char *pattern) const {
     float tX1 = (0.5f + m00 * x1 + m01 * y1 + m02);
     float tY1 = (0.5f + m10 * x1 + m11 * y1 + m12);
     float tX2 = (0.5f + m00 * x2 + m01 * y2 + m02);

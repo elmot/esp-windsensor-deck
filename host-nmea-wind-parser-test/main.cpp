@@ -115,3 +115,11 @@ TEST_CASE("Alarm statement") {
     }
     REQUIRE(windData.timestamp > 0);
 }
+
+void setAngleAlarm(bool value) {
+    windData.angleAlarm = value;
+}
+
+void setWindState(anemometer_state_t value) {
+    windData.state = value;
+}

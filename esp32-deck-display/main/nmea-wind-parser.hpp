@@ -24,7 +24,6 @@ typedef struct {
     volatile anemometer_state_t state;
     volatile int windAngle;
     volatile float windSpdMps;
-    volatile int backLightPercent;
     volatile bool angleAlarm;
     volatile TickType_t timestamp;
 } wind_data_t;
@@ -32,5 +31,11 @@ typedef struct {
 extern volatile wind_data_t windData;
 
 bool parseNmea(const char *nmeaString);
+
+void setAngleAlarm(bool value);
+
+void setWindState(anemometer_state_t value);
+
+
 
 #endif //TEST_NMEA_WIND_PARSER_HPP

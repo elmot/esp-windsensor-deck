@@ -95,7 +95,7 @@ bool parseNmea(const char *nmeaString) {
     const char *NO_WARNING = "$PEWWT,NONE*";
     if (strncmp(NO_WARNING, nmeaString, 7) == 0) {
         windData.timestamp = xTaskGetTickCount();
-        windData.angleAlarm = strncmp(NO_WARNING, nmeaString, strlen(NO_WARNING)) != 0;
+        setAngleAlarm(strncmp(NO_WARNING, nmeaString, strlen(NO_WARNING)) != 0);
         return true;
     }
     if (nmeaString[1] == 0 || nmeaString[2] == 0) return false;//Instrument type, ignored
@@ -148,7 +148,7 @@ bool parseNmea(const char *nmeaString) {
         default:
             return false;
     }
-    windData.state = state;
+    setWindState(state);
     windData.timestamp = xTaskGetTickCount();
     if (state != ANEMOMETER_DATA_FAIL) {
         windData.windSpdMps = speed;

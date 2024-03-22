@@ -20,4 +20,8 @@ menu "Windsensor Configuration"
         int "Wi-Fi connection timeout, seconds"
         default 5
 
+    config ALARM_LED_PIN
+        int "Alarm LED GPIO pin"
+        default 5
+
 endmenu
