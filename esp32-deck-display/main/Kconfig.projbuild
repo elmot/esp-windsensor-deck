@@ -24,6 +24,10 @@ menu "Windsensor Configuration"
         int "Alarm LED GPIO pin"
         default 5
 
+    config ALARM_LED_PIN_INVERTED
+        int "Alarm LED GPIO pin"
+        default 4
+
     config BACKLIGHT_UP_PIN
         int "LCB backlight intensity increase button pin"
         default 18

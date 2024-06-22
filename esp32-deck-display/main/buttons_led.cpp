@@ -47,7 +47,7 @@ void __attribute__((noreturn)) buttons_task(void *arg) {
 void __attribute__((noreturn)) alarm_led_task(void *args) {
     ESP_UNUSED(args);
     static const gpio_config_t gpioConfig = {
-            .pin_bit_mask = BIT(CONFIG_ALARM_LED_PIN),
+            .pin_bit_mask = BIT(CONFIG_ALARM_LED_PIN) | BIT(CONFIG_ALARM_LED_PIN_INVERTED),
             .mode = GPIO_MODE_OUTPUT,
             .pull_up_en = GPIO_PULLUP_DISABLE,
             .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -63,7 +63,7 @@ void __attribute__((noreturn)) alarm_led_task(void *args) {
             case ANEMOMETER_OK:
                 delay = 600;
                 if (!windData.angleAlarm) {
-                    level = 1;
+                    level = 0;
                 }
                 break;
             case ANEMOMETER_DATA_FAIL:
@@ -73,6 +73,7 @@ void __attribute__((noreturn)) alarm_led_task(void *args) {
                 delay = 200;
         }
         gpio_set_level((gpio_num_t) CONFIG_ALARM_LED_PIN, level);
+        gpio_set_level((gpio_num_t) CONFIG_ALARM_LED_PIN_INVERTED, !level);
         xSemaphoreTake(alarmSemaphore, pdMS_TO_TICKS(delay));
         level = !level;
     }
