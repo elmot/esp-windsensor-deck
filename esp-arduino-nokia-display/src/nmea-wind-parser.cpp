@@ -1,7 +1,7 @@
+#include <Arduino.h>
 #include "nmea-wind-parser.hpp"
 #include <cstring>
 #include <cmath>
-#include <esp32-hal.h>
 /*
           MWV Wind Speed and Angle
            1 2 3 4 5
@@ -150,7 +150,7 @@ bool parseNmea(const char *nmeaString) {
             return false;
     }
     setWindState(state);
-    windData.timestamp = xTaskGetTickCount();
+    windData.timestamp = millis();
     if (state != ANEMOMETER_DATA_FAIL) {
         windData.windSpdMps = speed;
         windData.windAngle = lroundf(angle);

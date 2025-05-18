@@ -9,7 +9,6 @@
 typedef int TickType_t ;
 extern TickType_t xTaskGetTickCount();
 #else
-#include "freertos/FreeRTOS.h"
 #endif
 
 typedef enum  {
@@ -25,7 +24,7 @@ typedef struct {
     volatile int windAngle;
     volatile float windSpdMps;
     volatile bool angleAlarm;
-    volatile TickType_t timestamp;
+    volatile unsigned long timestamp;
 } wind_data_t;
 
 extern wind_data_t windData;

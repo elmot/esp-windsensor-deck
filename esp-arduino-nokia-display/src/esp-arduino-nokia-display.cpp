@@ -1,5 +1,17 @@
 #include <Arduino.h>
+#ifdef ARDUINO_ARCH_ESP32
+#include "pinout-esp32.h"
 #include <WiFi.h>
+
+#else
+#ifdef ARDUINO_ARCH_ESP8266
+#include "pinout-esp.h"
+#include <ESP8266WiFi.h>
+#else
+#error "Unknown Board"
+#endif
+#endif
+
 #include <WiFiUdp.h>
 #include <SPI.h>
 #include <Adafruit_GFX.h>
@@ -9,13 +21,14 @@
 
 #include "nmea-wind-parser.hpp"
 
+
 #define NO_WARNINGS "$PEWWT,NONE"
 #define NO_WARNINGS_PREFIX_LEN 7
 #define NO_WARNINGS_LEN 11
 #define BUFFER_SIZE 8192
 
 
-const char *ssid = "yanus-wind";  // Your ROUTER SSID
+const char *ssid = "yanus-wind";  // WiFi SSID
 const char *pw = "EglaisEglais"; // and WiFi PASSWORD
 const int port = 9000;
 
@@ -38,13 +51,7 @@ void setWindState(anemometer_state_t value) {
 
 wind_data_t windData;
 
-// Software SPI
-// pin 25 - Serial clock out (SCLK)
-// pin 26 - Serial data out (DIN)
-// pin 27 - Data/Command select (D/C)
-// pin 14 - LCD chip select (CS)
-// pin 12 - LCD reset (RST)
-Adafruit_PCD8544 display = Adafruit_PCD8544(25, 26, 27, 14, 12);
+Adafruit_PCD8544 display = Adafruit_PCD8544(SPI_SCLK,SPI_DIN,SPI_DC,SPI_CS, SPI_RST);
 
 void paintStatus(const char * text) {
   display.clearDisplay();
