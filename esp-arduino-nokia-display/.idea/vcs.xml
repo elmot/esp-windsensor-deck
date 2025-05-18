@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../rpi-display/pimoroni-pico" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../rpi-display/pimoroni-pico/drivers/bme280/src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../rpi-display/pimoroni-pico/drivers/bme68x/src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../rpi-display/pimoroni-pico/drivers/bmp280/src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../rpi-display/pimoroni-pico/drivers/mlx90640/src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../rpi-display/pimoroni-pico/drivers/scd4x/src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../rpi-display/pimoroni-pico/drivers/vl53l5cx/src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../rpi-display/pimoroni-pico/micropython/modules/qrcode" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../rpi-display/pimoroni-pico/micropython/modules/ulab" vcs="Git" />
+  </component>
+</project>

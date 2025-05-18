@@ -1,6 +1,7 @@
 #include "nmea-wind-parser.hpp"
 #include <cstring>
 #include <cmath>
+#include <esp32-hal.h>
 /*
           MWV Wind Speed and Angle
            1 2 3 4 5
@@ -51,7 +52,7 @@ static bool isNmeaFrameOk(const char *nmeaString) {
 }
 
 enum parse_result {
-    OK, MISSING, WRONG
+    SUCCESS, MISSING, WRONG
 };
 
 static enum parse_result parseFloat(const char *&ptr, float &parsed) {
@@ -65,7 +66,7 @@ static enum parse_result parseFloat(const char *&ptr, float &parsed) {
                 case ',':
                 case 0:
                     parsed = result;
-                    return OK;
+                    return SUCCESS;
                 case '.':
                     goto fraction;
                 default:
@@ -83,7 +84,7 @@ static enum parse_result parseFloat(const char *&ptr, float &parsed) {
                 case ',':
                 case 0:
                     parsed = result;
-                    return OK;
+                    return SUCCESS;
                 default:
                     return WRONG;
             }
@@ -94,7 +95,7 @@ bool parseNmea(const char *nmeaString) {
     if (!isNmeaFrameOk(nmeaString)) return false;
     const char *NO_WARNING = "$PEWWT,NONE*";
     if (strncmp(NO_WARNING, nmeaString, 7) == 0) {
-        windData.timestamp = xTaskGetTickCount();
+        windData.timestamp = millis();
         setAngleAlarm(strncmp(NO_WARNING, nmeaString, strlen(NO_WARNING)) != 0);
         return true;
     }
